@@ -1,5 +1,7 @@
+use std::arch::x86_64::_MM_FROUND_CUR_DIRECTION;
 use std::cell::{Ref, RefCell};
 use std::rc::{Rc, Weak};
+use std::thread::current;
 
 pub type BstNodeLink = Rc<RefCell<BstNode>>;
 pub type WeakBstNodeLink = Weak<RefCell<BstNode>>;
@@ -359,5 +361,92 @@ found, the function will add new node value under the target_node. Since it’s 
 doesn’t exist in the current tree, return status code. 
      */
 
+    pub fn add_node(&self, target_node: &BstNodeLink, value: i32) -> bool {
+        let target_node_key = target_node.borrow().key.unwrap();
+        let x_node = BstNode::tree_search(&self, &target_node_key);
+        //println!("found -> {:?}", x_node.unwrap().borrow().key);
 
+        match x_node {
+            Some(current_node) => {
+                if current_node.borrow().key.unwrap() < value{
+                    //recurse to the right child if able
+                    if BstNode::is_right_child_exist(&current_node){
+                        let right_node = current_node.borrow().right.clone();
+                        return true;
+                    } else{
+                        //we can't recurse so we insert to the right
+                        current_node.borrow_mut().add_right_child(&current_node, value);
+                    }
+                } else{
+                    if BstNode::is_left_child_exist(&current_node){
+                        let left_node = current_node.borrow().left.clone();
+                        return true;
+                    } else{
+                        //we can't recurse so we insert to the left
+                        current_node.borrow_mut().add_left_child(&current_node, value);
+                    }
+                }
+    
+                //return the root
+                return false;
+            }
+            None => {
+                false
+            }
+        }
+    }
+
+    pub fn tree_predecessor(node: &BstNodeLink) -> Option<BstNodeLink> {
+        //create a shadow of x_node so it can mutate
+        let mut x_node = node;
+        let left_node = &x_node.borrow().left.clone();
+        if BstNode::is_nil(left_node)!=true{
+            return Some(left_node.clone().unwrap().borrow().maximum());
+        }
+
+        let mut y_node = BstNode::upgrade_weak_to_strong(x_node.borrow().parent.clone());
+        let y_node_left = &y_node.clone().unwrap().borrow().left.clone();
+        let mut y_node2: Rc<RefCell<BstNode>>;
+        while BstNode::is_nil(&y_node) && BstNode::is_node_match_option(Some(x_node.clone()), y_node_left.clone()) {
+            y_node2 = y_node.clone().unwrap();
+            x_node = &y_node2;
+            let y_parent = y_node.clone().unwrap().borrow().parent.clone().unwrap();
+            y_node = BstNode::upgrade_weak_to_strong(Some(y_parent));
+        }
+
+        //in case our sucessor traversal yield root, means self is the highest key
+        if BstNode::is_node_match_option(y_node.clone(), Some(BstNode::get_root(&x_node))) {
+            return None;
+        }
+
+        //default return self / x_node
+        return Some(y_node.clone().unwrap())
+    }
+
+    pub fn median(&self) -> BstNodeLink {
+        let mut count = 0;
+        if self.key.is_some() {
+            if let Some(left_node) = &self.left {
+                if let Some(right_node) = &left_node.borrow().right {
+                    return right_node.borrow_mut().maximum();
+                }
+            }
+        }
+        self.get_bst_nodelink_copy()
+    }
+
+    pub fn tree_rebalance(node: &BstNodeLink) -> BstNodeLink {
+        let root = node.borrow().median();
+        let current_node = node;
+
+        if let Some(right) = current_node.borrow().right.clone(){
+            let parent = right.borrow().parent.clone().unwrap().upgrade().unwrap();
+            let parent_key = parent.borrow().key.unwrap();
+            
+            let right_child = right.borrow().right.clone().unwrap();
+            let left_child = right.borrow().left.clone().unwrap();
+        }
+
+        root 
+    }
 }

@@ -352,4 +352,12 @@ impl BstNode {
             Some(x) => Some(x.upgrade().unwrap()),
         }
     }
+
+    /*
+     This function will seek target_node in the current self binary search tree. When the target_node is 
+found, the function will add new node value under the target_node. Since it’s possible target_node 
+doesn’t exist in the current tree, return status code. 
+     */
+
+
 }

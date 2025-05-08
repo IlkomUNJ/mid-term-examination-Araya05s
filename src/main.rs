@@ -120,11 +120,36 @@ fn test_binary_search_tree(){
 
         //test the insertion by printing the tree
         generate_dotfile_bst(&rootlink2.as_ref().unwrap(), "bst.dot");
-
         //test removal
         let rootalter = BstNode::tree_delete(&rootlink2.as_ref().unwrap());
         generate_dotfile_bst(&rootalter, "bst_delete_root.dot");
+
+        
+        
     }
+    
+    
+    for &key in query_keys.iter() {
+        if let Some(node) = rootlink.borrow().tree_search(&key) {
+            print!("predeccessor of node ({}) is ", key);
+            
+            if let Some(predeccessor) = BstNode::tree_predecessor(&node) {
+                println!("{:?}", predeccessor.borrow().key);
+            } else {
+                println!("not found");
+            }
+            //add node test
+            if key == 15 {
+                let insert_to_15 = rootlink.borrow().add_node(&node, 5);
+                println!("Insert to 15? {}", insert_to_15);
+            }  
+        } else {
+            println!("node with key of {} does not exist, failed to get successor", key)
+        }
+    }
+    //min test
+    let median_node = rootlink.borrow().median();
+    println!("median result {:?}", median_node.borrow().key);
 }
 
 fn test_index(){
@@ -228,4 +253,5 @@ fn test_binary_tree() {
     //print the tree again
     main_tree_path = "prime_t4.dot";
     generate_dotfile(&rootlink, main_tree_path);
+
 }
